@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import pint
 import datetime, requests, time, schedule
-from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, activated_temp_ch, testing, scheduled_times
+from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, active_temp_ch, testing, scheduled_times
 
 
 now = datetime.datetime.now()
