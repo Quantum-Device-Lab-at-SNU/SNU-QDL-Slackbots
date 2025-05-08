@@ -11,3 +11,5 @@ active_temp_ch = {
     "CH5 T": "Still Flange",
     "CH6 T": "MXC Flange"
 }
+
+testing = True

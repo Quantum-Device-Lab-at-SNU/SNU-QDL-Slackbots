@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
-import datetime
 import pint
-from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, activated_temp_ch
-from posting import post_to_slack
+import datetime, requests, time, schedule
+from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, activated_temp_ch, testing
+
 
 now = datetime.datetime.now()
 datestr = '%s-%s-%s' % (str(now.year)[-2:], str('{:02d}'.format(now.month)), str('{:02d}'.format(now.day)))
@@ -118,6 +118,11 @@ def status_message():
 
     return message
 
+def post_to_slack():
+    payload = {"text": status_message(), "link_names": 1, "mrkdwn": True}
+    requests.post(SLACK_WEBHOOK_URL, json=payload)
+
+
 #   TODO: check compressor status, turbopump, etc., to make a notification in case of abnormal signs.
 #  activated_cpa_ch = {
 #     'cpatempwi': 'Input water temp.',
@@ -164,8 +169,24 @@ def status_message():
 # """
 # post_to_slack(message, SLACK_WEBHOOK_URL)
 
+
+
 if __name__ == '__main__':
     # for testing status message
-    msg = status_message()
-    print(msg)
-    post_to_slack(msg, SLACK_WEBHOOK_URL)
+    if testing:
+        msg = status_message()
+        print(msg)
+        post_to_slack(msg, SLACK_WEBHOOK_URL)
+    else:
+
+        # Schedule the task at specific times
+        schedule.every().day.at("06:00").do(post_to_slack)
+        schedule.every().day.at("12:00").do(post_to_slack)
+        schedule.every().day.at("18:00").do(post_to_slack)
+        schedule.every().day.at("00:00").do(post_to_slack)
+
+        _error_status = False
+        while True:
+            schedule.run_pending()
+            time.sleep(30)
+
