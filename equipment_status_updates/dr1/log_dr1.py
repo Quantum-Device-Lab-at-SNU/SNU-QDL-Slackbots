@@ -23,7 +23,7 @@ def latest_pressure_status():
 
     # get timestamp
     timestamp = [int(x) for x in latest.iloc[0].split('-')][::-1]  # DD-MM-YY format parsed and reversed in order
-    timestamp.extend([int(x) for x in latest[1].split(':')])  # HH:MM:SS format parsed
+    timestamp.extend([int(x) for x in latest.iloc[1].spalit(':')])  # HH:MM:SS format parsed
     timestamp[0] += 2000 # YY to YYYY format
     return {
         "timestamp": datetime.datetime(*timestamp),
@@ -42,10 +42,10 @@ def latest_temp_status():
         dict: a dictionary consisting of quantity names and logged values
     """
     temp_status = {}
-    for ch in activated_temp_ch.keys():
+    for ch in active_temp_ch.keys():
         filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, datestr, ch, datestr)
         df = pd.read_csv(filePath)
-        temp_status[activated_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
+        temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
     return temp_status
 
 def latest_flow_status():
