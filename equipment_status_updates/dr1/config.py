@@ -12,4 +12,8 @@ active_temp_ch = {
     "CH6 T": "MXC Flange"
 }
 
+# status update times (str in "hh:mm" format)
+scheduled_times = ["00:00", "06:00", "12:00", "18:00"]
+
+# variable to indicate if you are testing
 testing = True

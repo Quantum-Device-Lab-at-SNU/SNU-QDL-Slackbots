@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import pint
 import datetime, requests, time, schedule
-from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, activated_temp_ch, testing
+from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, activated_temp_ch, testing, scheduled_times
 
 
 now = datetime.datetime.now()
@@ -180,13 +180,11 @@ if __name__ == '__main__':
     else:
 
         # Schedule the task at specific times
-        schedule.every().day.at("06:00").do(post_to_slack)
-        schedule.every().day.at("12:00").do(post_to_slack)
-        schedule.every().day.at("18:00").do(post_to_slack)
-        schedule.every().day.at("00:00").do(post_to_slack)
+        for _t in scheduled_times:
+            schedule.every().day.at(_t).do(post_to_slack)
 
         _error_status = False
         while True:
             schedule.run_pending()
-            time.sleep(30)
+            time.sleep(60)
 
