@@ -185,6 +185,9 @@ if __name__ == '__main__':
 
         _error_status = False
         while True:
-            schedule.run_pending()
-            time.sleep(60)
+            if _error_status:
+                pass            # TODO: section to implement Slack channel notification in case of error
+            else:
+                schedule.run_pending()
+            time.sleep(60)    # check every 60 sec
 
