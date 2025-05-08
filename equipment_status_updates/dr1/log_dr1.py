@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import pint
-from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, activated_temp_ch
+from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, active_temp_ch
 from posting import post_to_slack
 
 now = datetime.datetime.now()
@@ -42,10 +42,10 @@ def latest_temp_status():
         dict: a dictionary consisting of quantity names and logged values
     """
     temp_status = {}
-    for ch in activated_temp_ch.keys():
+    for ch in active_temp_ch.keys():
         filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, datestr, ch, datestr)
         df = pd.read_csv(filePath)
-        temp_status[activated_temp_ch[ch]] = (float(df.iloc[-1][2]) * ureg.kelvin).to_compact()
+        temp_status[active_temp_ch[ch]] = (float(df.iloc[-1][2]) * ureg.kelvin).to_compact()
     return temp_status
 
 def latest_flow_status():
@@ -103,7 +103,7 @@ def status_message():
 
     # log temperatures
     message += "• _*Temperatures*_ - "
-    for _T_i, _T in enumerate(['50K Flange', '4K Flange', 'Still Flange', 'MXC Flange']):
+    for _T_i, _T in enumerate(active_temp_ch.values()):
         if _T_i != 0:
             message += ", "
         message += f"*{_T}:* {_status[_T]:.2f~P}"
