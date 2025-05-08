@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import pint
-from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, active_temp_ch
+from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, activated_temp_ch
 from posting import post_to_slack
 
 now = datetime.datetime.now()
@@ -22,17 +22,17 @@ def latest_pressure_status():
     latest = df.iloc[-1]
 
     # get timestamp
-    timestamp = [int(x) for x in latest[0].split('-')][::-1]  # DD-MM-YY format parsed and reversed in order
+    timestamp = [int(x) for x in latest.iloc[0].split('-')][::-1]  # DD-MM-YY format parsed and reversed in order
     timestamp.extend([int(x) for x in latest[1].split(':')])  # HH:MM:SS format parsed
     timestamp[0] += 2000 # YY to YYYY format
     return {
         "timestamp": datetime.datetime(*timestamp),
-        "P1": (float(latest[5]) * ureg.mbar).to_compact(),
-        "P2": (float(latest[11]) * ureg.mbar).to_compact(),
-        "P3": (float(latest[17]) * ureg.mbar).to_compact(),
-        "P4": (float(latest[23]) * ureg.mbar).to_compact(),
-        "P5": (float(latest[29]) * ureg.mbar).to_compact(),
-        "P6": (float(latest[35]) * ureg.mbar).to_compact(),
+        "P1": (float(latest.iloc[5]) * ureg.mbar).to_compact(),
+        "P2": (float(latest.iloc[11]) * ureg.mbar).to_compact(),
+        "P3": (float(latest.iloc[17]) * ureg.mbar).to_compact(),
+        "P4": (float(latest.iloc[23]) * ureg.mbar).to_compact(),
+        "P5": (float(latest.iloc[29]) * ureg.mbar).to_compact(),
+        "P6": (float(latest.iloc[35]) * ureg.mbar).to_compact(),
     }
 
 def latest_temp_status():
@@ -42,10 +42,10 @@ def latest_temp_status():
         dict: a dictionary consisting of quantity names and logged values
     """
     temp_status = {}
-    for ch in active_temp_ch.keys():
+    for ch in activated_temp_ch.keys():
         filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, datestr, ch, datestr)
         df = pd.read_csv(filePath)
-        temp_status[active_temp_ch[ch]] = (float(df.iloc[-1][2]) * ureg.kelvin).to_compact()
+        temp_status[activated_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
     return temp_status
 
 def latest_flow_status():
@@ -56,7 +56,7 @@ def latest_flow_status():
     """
     filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, datestr, datestr)
     df = pd.read_csv(filePath)
-    return {'Flow': (float(df.iloc[-1][2]) * ureg.millimol / ureg.s).to_compact()}
+    return {'Flow': (float(df.iloc[-1, 2]) * ureg.millimol / ureg.s).to_compact()}
 
 def lastest_channel_status():
     """Get latest channel status (as seen from Control Unit) from Bluefors log files
@@ -67,8 +67,8 @@ def lastest_channel_status():
     filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, datestr, datestr)
     df = pd.read_csv(filePath)
 
-    ch_name = np.array(df.iloc[-1][3::2], dtype=str)
-    ch_val = np.array(df.iloc[-1][4::2], dtype=bool)
+    ch_name = np.array(df.iloc[-1, 3::2], dtype=str)
+    ch_val = np.array(df.iloc[-1, 4::2], dtype=bool)
 
     on_channels = ch_name[ch_val]
     return {'ON Channels': on_channels}
@@ -103,7 +103,7 @@ def status_message():
 
     # log temperatures
     message += "• _*Temperatures*_ - "
-    for _T_i, _T in enumerate(active_temp_ch.values()):
+    for _T_i, _T in enumerate(['50K Flange', '4K Flange', 'Still Flange', 'MXC Flange']):
         if _T_i != 0:
             message += ", "
         message += f"*{_T}:* {_status[_T]:.2f~P}"
