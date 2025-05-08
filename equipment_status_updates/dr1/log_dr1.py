@@ -176,7 +176,7 @@ if __name__ == '__main__':
     if testing:
         msg = status_message()
         print(msg)
-        post_to_slack(msg, SLACK_WEBHOOK_URL)
+        post_to_slack()
     else:
 
         # Schedule the task at specific times
