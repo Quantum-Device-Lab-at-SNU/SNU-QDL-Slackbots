@@ -23,7 +23,7 @@ def latest_pressure_status():
 
     # get timestamp
     timestamp = [int(x) for x in latest.iloc[0].split('-')][::-1]  # DD-MM-YY format parsed and reversed in order
-    timestamp.extend([int(x) for x in latest.iloc[1].spalit(':')])  # HH:MM:SS format parsed
+    timestamp.extend([int(x) for x in latest.iloc[1].split(':')])  # HH:MM:SS format parsed
     timestamp[0] += 2000 # YY to YYYY format
     return {
         "timestamp": datetime.datetime(*timestamp),
