@@ -4,11 +4,11 @@ import pint
 import datetime, requests, time, schedule
 from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, active_temp_ch, testing, scheduled_times
 
-
-now = datetime.datetime.now()
-datestr = '%s-%s-%s' % (str(now.year)[-2:], str('{:02d}'.format(now.month)), str('{:02d}'.format(now.day)))
-
 ureg = pint.UnitRegistry()
+
+def datestr():
+    now = datetime.datetime.now()
+    return '%s-%s-%s' % (str(now.year)[-2:], str('{:02d}'.format(now.month)), str('{:02d}'.format(now.day)))
 
 def latest_pressure_status():
     """Get latest pressure status from Bluefors log files
@@ -16,7 +16,7 @@ def latest_pressure_status():
     Returns:
         dict: a dictionary consisting of quantity names and logged values
     """
-    filePath = '%s/%s/maxigauge %s.log' % (BF_LOG_FOLDER, datestr, datestr)
+    filePath = '%s/%s/maxigauge %s.log' % (BF_LOG_FOLDER, datestr(), datestr())
 
     df = pd.read_csv(filePath)
     latest = df.iloc[-1]
@@ -43,7 +43,7 @@ def latest_temp_status():
     """
     temp_status = {}
     for ch in active_temp_ch.keys():
-        filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, datestr, ch, datestr)
+        filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, datestr(), ch, datestr())
         df = pd.read_csv(filePath)
         temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
     return temp_status
@@ -54,7 +54,7 @@ def latest_flow_status():
     Returns:
         dict: a dictionary consisting of quantity names and logged values
     """
-    filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, datestr, datestr)
+    filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, datestr(), datestr())
     df = pd.read_csv(filePath)
     return {'Flow': (float(df.iloc[-1, 2]) * ureg.millimol / ureg.s).to_compact()}
 
@@ -64,7 +64,7 @@ def lastest_channel_status():
     Returns:
         dict: a dictionary consisting of quantity names and logged values
     """
-    filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, datestr, datestr)
+    filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, datestr(), datestr())
     df = pd.read_csv(filePath)
 
     ch_name = np.array(df.iloc[-1, 3::2], dtype=str)
