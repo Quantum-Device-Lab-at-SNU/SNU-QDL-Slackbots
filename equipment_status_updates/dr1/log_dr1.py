@@ -6,9 +6,23 @@ from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, active_temp_ch, testing, sc
 
 ureg = pint.UnitRegistry()
 
-def datestr():
+def datestr(yesterday = False):
     now = datetime.datetime.now()
-    return '%s-%s-%s' % (str(now.year)[-2:], str('{:02d}'.format(now.month)), str('{:02d}'.format(now.day)))
+    
+    if not yesterday:
+        ymd_str = (
+            str(now.year)[-2:],
+            str('{:02d}'.format(now.month)),
+            str('{:02d}'.format(now.day))
+        )
+    else:
+        prev_day = now - datetime.timedelta(days=1)
+        ymd_str = (
+            str(prev_day.year)[-2:],
+            str('{:02d}'.format(prev_day.month)),
+            str('{:02d}'.format(prev_day.day))
+        )
+    return '%s-%s-%s' % ymd_str
 
 def latest_pressure_status():
     """Get latest pressure status from Bluefors log files
@@ -16,9 +30,15 @@ def latest_pressure_status():
     Returns:
         dict: a dictionary consisting of quantity names and logged values
     """
-    filePath = '%s/%s/maxigauge %s.log' % (BF_LOG_FOLDER, datestr(), datestr())
+    try: 
+        today = datestr()
+        filePath = '%s/%s/maxigauge %s.log' % (BF_LOG_FOLDER, today, today)
+        df = pd.read_csv(filePath)
+    except:
+        yesterday = datestr(yesterday=True)
+        filePath = '%s/%s/maxigauge %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
+        df = pd.read_csv(filePath)
 
-    df = pd.read_csv(filePath)
     latest = df.iloc[-1]
 
     # get timestamp
@@ -43,8 +63,14 @@ def latest_temp_status():
     """
     temp_status = {}
     for ch in active_temp_ch.keys():
-        filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, datestr(), ch, datestr())
-        df = pd.read_csv(filePath)
+        try:
+            today = datestr()
+            filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, today, ch, today)
+            df = pd.read_csv(filePath)
+        except:
+            yesterday = datestr(yesterday=True)
+            filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, yesterday, ch, yesterday)
+            df = pd.read_csv(filePath)
         temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
     return temp_status
 
@@ -54,8 +80,15 @@ def latest_flow_status():
     Returns:
         dict: a dictionary consisting of quantity names and logged values
     """
-    filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, datestr(), datestr())
-    df = pd.read_csv(filePath)
+    try:
+        today = datestr()
+        filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, today, today)
+        df = pd.read_csv(filePath)
+    except:
+        yesterday = datestr(yesterday=True)
+        filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
+        df = pd.read_csv(filePath)
+
     return {'Flow': (float(df.iloc[-1, 2]) * ureg.millimol / ureg.s).to_compact()}
 
 def lastest_channel_status():
@@ -64,8 +97,14 @@ def lastest_channel_status():
     Returns:
         dict: a dictionary consisting of quantity names and logged values
     """
-    filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, datestr(), datestr())
-    df = pd.read_csv(filePath)
+    try:
+        today = datestr()
+        filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, today, today)
+        df = pd.read_csv(filePath)
+    except:
+        yesterday = datestr(yesterday=True)
+        filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
+        df = pd.read_csv(filePath)
 
     ch_name = np.array(df.iloc[-1, 3::2], dtype=str)
     ch_val = np.array(df.iloc[-1, 4::2], dtype=bool)
