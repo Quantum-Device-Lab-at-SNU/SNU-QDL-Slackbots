@@ -129,10 +129,10 @@ def status_message():
 
     # Green light if MXC Flange temperature is below 100mK w/ other flanges lower than a reasonable set of temperatures
     mc_alarm_emoji = "🟢" if (
-        _status['MXC Flange'] < (100 * ureg.mK) &
-        _status['Still Flange'] < (1 * ureg.K) &
-        _status['4K Flange'] < (5 * ureg.K) &
-        _status['50K Flange'] < (60 * ureg.K)
+        (_status['MXC Flange'] < (100 * ureg.mK)) &
+        (_status['Still Flange'] < (1 * ureg.K)) &
+        (_status['4K Flange'] < (5 * ureg.K)) &
+        (_status['50K Flange'] < (60 * ureg.K))
     )  else "🔴"
 
     message = f"*🧊 DR1 Status Update (Time: {_status['timestamp']}, MXC Status: {mc_alarm_emoji})*\n"
