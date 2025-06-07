@@ -34,12 +34,12 @@ def latest_pressure_status():
         today = datestr()
         filePath = '%s/%s/maxigauge %s.log' % (BF_LOG_FOLDER, today, today)
         df = pd.read_csv(filePath)
+        latest = df.iloc[-1]
     except:
         yesterday = datestr(yesterday=True)
         filePath = '%s/%s/maxigauge %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
         df = pd.read_csv(filePath)
-
-    latest = df.iloc[-1]
+        latest = df.iloc[-1]
 
     # get timestamp
     timestamp = [int(x) for x in latest.iloc[0].split('-')][::-1]  # DD-MM-YY format parsed and reversed in order
@@ -67,11 +67,12 @@ def latest_temp_status():
             today = datestr()
             filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, today, ch, today)
             df = pd.read_csv(filePath)
+            temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
         except:
             yesterday = datestr(yesterday=True)
             filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, yesterday, ch, yesterday)
             df = pd.read_csv(filePath)
-        temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
+            temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
     return temp_status
 
 def latest_flow_status():
@@ -84,12 +85,14 @@ def latest_flow_status():
         today = datestr()
         filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, today, today)
         df = pd.read_csv(filePath)
+        flow_rate = float(df.iloc[-1, 2])
     except:
         yesterday = datestr(yesterday=True)
         filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
         df = pd.read_csv(filePath)
+        flow_rate = float(df.iloc[-1, 2])
 
-    return {'Flow': (float(df.iloc[-1, 2]) * ureg.millimol / ureg.s).to_compact()}
+    return {'Flow': (flow_rate * ureg.millimol / ureg.s).to_compact()}
 
 def lastest_channel_status():
     """Get latest channel status (as seen from Control Unit) from Bluefors log files
@@ -101,13 +104,14 @@ def lastest_channel_status():
         today = datestr()
         filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, today, today)
         df = pd.read_csv(filePath)
+        ch_name = np.array(df.iloc[-1, 3::2], dtype=str)
+        ch_val = np.array(df.iloc[-1, 4::2], dtype=bool)
     except:
         yesterday = datestr(yesterday=True)
         filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
         df = pd.read_csv(filePath)
-
-    ch_name = np.array(df.iloc[-1, 3::2], dtype=str)
-    ch_val = np.array(df.iloc[-1, 4::2], dtype=bool)
+        ch_name = np.array(df.iloc[-1, 3::2], dtype=str)
+        ch_val = np.array(df.iloc[-1, 4::2], dtype=bool)
 
     on_channels = ch_name[ch_val]
     return {'ON Channels': on_channels}
