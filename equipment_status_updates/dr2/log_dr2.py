@@ -139,7 +139,7 @@ def status_message():
         (_status['50K Flange'] < (60 * ureg.K))
     )  else "🔴"
 
-    message = f"*🧊 DR1 Status Update (Time: {_status['timestamp']}, MXC Status: {mc_alarm_emoji})*\n"
+    message = f"*🧊 DR2 Status Update (Time: {_status['timestamp']}, MXC Status: {mc_alarm_emoji})*\n"
     # log pressures
     message += "• _*Pressures*_ - "
     for _p_i, _p in enumerate(['P1', 'P2', 'P3', 'P4', 'P5', 'P6']):
