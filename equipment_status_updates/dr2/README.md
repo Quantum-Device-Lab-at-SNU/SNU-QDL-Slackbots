@@ -1,5 +1,5 @@
-# DR1 Notification Slackbot
-This script implements a Slackbot that reports the status of DR1 (Bluefors dilution refrigerator) in the SNU Quantum Device Lab.
+# DR2 Notification Slackbot
+This script implements a Slackbot that reports the status of DR2 (Bluefors dilution refrigerator) in the SNU Quantum Device Lab.
 
 ## Setting Up
 ### Installation
@@ -27,7 +27,7 @@ It is necessary to modify variables of the `config.py` file to specify an approp
 ### Testing Script
 In the command prompt, execute
 ```bash
-$python <path_to_this_directory>\log_dr1.py
+$python <path_to_this_directory>\log_dr2.py
 ```
 in order to test the output. You need to make sure that the bot is posting the correct message to the desired Slack channel.
 
@@ -35,7 +35,7 @@ in order to test the output. You need to make sure that the bot is posting the c
 1. Open Task Scheduler. Press Win + S → type Task Scheduler → open it
 2. Click Create Task (not "Basic Task"). This gives you more control.
 3. General Tab
-    - Name: DR1-StatusBot Startup
+    - Name: DR2-StatusBot Startup
     - Check: "Run whether user is logged on or not"
     - Check: "Run with highest privileges"
     - Configure for: your OS version
@@ -47,7 +47,7 @@ in order to test the output. You need to make sure that the bot is posting the c
     - Click New
     - Action: Start a program
     - Program/script: path to your Python interpreter, e.g., `C:\Users\YourName\AppData\Local\Programs\Python\Python311\python.exe`
-    - Add arguments (your script path in quotes), e.g., `C:\Users\YourName\SNU-QDL-Slackbots\equipment_status_updates\dr1\log_dr1.py`
-    - Start in (optional): directory where the script resides, e.g., `C:\Users\YourName\SNU-QDL-Slackbots\equipment_status_updates\dr1\`
+    - Add arguments (your script path in quotes), e.g., `C:\Users\YourName\SNU-QDL-Slackbots\equipment_status_updates\dr2\log_dr2.py`
+    - Start in (optional): directory where the script resides, e.g., `C:\Users\YourName\SNU-QDL-Slackbots\equipment_status_updates\dr2\`
 6. Click OK. It may prompt for your Windows password (because it will run in the background)
 
