@@ -158,7 +158,10 @@ def status_message():
     for _T_i, _T in enumerate(['50K Flange', '4K Flange', 'Still Flange', 'MXC Flange']):
         if _T_i != 0:
             message += ", "
-        message += f"*{_T}:* {_status[_T]:.2f~P}"
+        try: 
+            message += f"*{_T}:* {_status[_T]:.2f~P}"
+        except:
+            message += f"*{_T}:* NaN"
     
     message += "\n"
 
