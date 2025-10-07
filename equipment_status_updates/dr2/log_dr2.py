@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import pint
+from pathlib import Path
 import datetime, requests, time, schedule
 from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, active_temp_ch, testing, scheduled_times
 
@@ -32,13 +33,13 @@ def latest_pressure_status():
     """
     try: 
         today = datestr()
-        filePath = '%s/%s/maxigauge %s.log' % (BF_LOG_FOLDER, today, today)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / today / f"maxigauge {today}.log"
+        df = pd.read_csv(str(filePath))
         latest = df.iloc[-1]
     except:
         yesterday = datestr(yesterday=True)
-        filePath = '%s/%s/maxigauge %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / yesterday / f"maxigauge {yesterday}.log"
+        df = pd.read_csv(str(filePath))
         latest = df.iloc[-1]
 
     # get timestamp
@@ -65,13 +66,13 @@ def latest_temp_status():
     for ch in active_temp_ch.keys():
         try:
             today = datestr()
-            filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, today, ch, today)
-            df = pd.read_csv(filePath)
+            filePath = Path(BF_LOG_FOLDER) / today / f"{ch} {today}.log"
+            df = pd.read_csv(str(filePath))
             temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
         except:
             yesterday = datestr(yesterday=True)
-            filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, yesterday, ch, yesterday)
-            df = pd.read_csv(filePath)
+            filePath = Path(BF_LOG_FOLDER) / yesterday / f"{ch} {yesterday}.log"
+            df = pd.read_csv(str(filePath))
             temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
     return temp_status
 
@@ -83,13 +84,13 @@ def latest_flow_status():
     """
     try:
         today = datestr()
-        filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, today, today)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / today / f"Flowmeter {today}.log"
+        df = pd.read_csv(str(filePath))
         flow_rate = float(df.iloc[-1, 2])
     except:
         yesterday = datestr(yesterday=True)
-        filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / yesterday / f"Flowmeter {yesterday}.log"
+        df = pd.read_csv(str(filePath))
         flow_rate = float(df.iloc[-1, 2])
 
     return {'Flow': (flow_rate * ureg.millimol / ureg.s).to_compact()}
@@ -102,14 +103,14 @@ def lastest_channel_status():
     """
     try:
         today = datestr()
-        filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, today, today)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / today / f"Channels {today}.log"
+        df = pd.read_csv(str(filePath))
         ch_name = np.array(df.iloc[-1, 3::2], dtype=str)
         ch_val = np.array(df.iloc[-1, 4::2], dtype=bool)
     except:
         yesterday = datestr(yesterday=True)
-        filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / yesterday / f"Channels {yesterday}.log"
+        df = pd.read_csv(str(filePath))
         ch_name = np.array(df.iloc[-1, 3::2], dtype=str)
         ch_val = np.array(df.iloc[-1, 4::2], dtype=bool)
 
