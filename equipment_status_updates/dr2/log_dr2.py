@@ -76,7 +76,7 @@ def latest_temp_status():
                 df = pd.read_csv(str(filePath))
                 temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
             except: # out of range temperature channels are not logged
-                pass
+                temp_status[active_temp_ch[ch]] = np.nan
     return temp_status
 
 def latest_flow_status():
