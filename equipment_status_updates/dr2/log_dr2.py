@@ -69,11 +69,14 @@ def latest_temp_status():
             filePath = Path(BF_LOG_FOLDER) / today / f"{ch} {today}.log"
             df = pd.read_csv(str(filePath))
             temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
-        except:
-            yesterday = datestr(yesterday=True)
-            filePath = Path(BF_LOG_FOLDER) / yesterday / f"{ch} {yesterday}.log"
-            df = pd.read_csv(str(filePath))
-            temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
+        except: # if today's log file is not found (typically happens at 00:00am), search for yesterday's log file
+            try:
+                yesterday = datestr(yesterday=True)
+                filePath = Path(BF_LOG_FOLDER) / yesterday / f"{ch} {yesterday}.log"
+                df = pd.read_csv(str(filePath))
+                temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
+            except: # out of range temperature channels are not logged
+                pass
     return temp_status
 
 def latest_flow_status():
