@@ -3,7 +3,11 @@ import numpy as np
 import pint
 from pathlib import Path
 import datetime, requests, time, schedule
-from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, active_temp_ch, testing, scheduled_times
+import pygetwindow as gw
+import pyautogui
+from slack_sdk import WebClient
+
+from config import BF_LOG_FOLDER, DR_NAME, SCREENSHOT_PATH, SLACK_BOT_TOKEN, SLACK_CHANNEL_ID, SLACK_WEBHOOK_URL, active_temp_ch, testing, scheduled_times
 
 ureg = pint.UnitRegistry()
 
@@ -143,7 +147,7 @@ def status_message():
         (_status['50K Flange'] < (60 * ureg.K))
     )  else "🔴"
 
-    message = f"*🧊 DR2 Status Update (Time: {_status['timestamp']}, MXC Status: {mc_alarm_emoji})*\n"
+    message = f"*🧊 {DR_NAME} Status Update (Time: {_status['timestamp']}, MXC Status: {mc_alarm_emoji})*\n"
     # log pressures
     message += "• _*Pressures*_ - "
     for _p_i, _p in enumerate(['P1', 'P2', 'P3', 'P4', 'P5', 'P6']):
@@ -173,9 +177,45 @@ def status_message():
 
     return message
 
+def capture_program_window(title_keyword, output_path=SCREENSHOT_PATH):
+    matches = [
+        w for w in gw.getWindowsWithTitle(title_keyword)
+        if w.title and w.width > 0 and w.height > 0
+    ]
+
+    if not matches:
+        raise RuntimeError(f"No window found containing title: {title_keyword}")
+
+    window = matches[0]
+
+    # Bring the program to the front
+    window.restore()
+    window.activate()
+
+    # Capture only that window region
+    screenshot = pyautogui.screenshot(region=(
+        window.left,
+        window.top,
+        window.width,
+        window.height,
+    ))
+
+    screenshot.save(output_path)
+    return output_path
+
 def post_to_slack():
-    payload = {"text": status_message(), "link_names": 1, "mrkdwn": True}
-    requests.post(SLACK_WEBHOOK_URL, json=payload)
+
+    message = status_message()
+    screenshot_path = capture_program_window('Bluefors Control Software Frontend', output_path=SCREENSHOT_PATH)
+
+    client = WebClient(token=SLACK_BOT_TOKEN)
+
+    client.files_upload_v2(
+        channel=SLACK_CHANNEL_ID,
+        file=screenshot_path,
+        title=f"{DR_NAME} Bluefors Control Screenshot",
+        initial_comment=message,
+    )
 
 
 #   TODO: check compressor status, turbopump, etc., to make a notification in case of abnormal signs.
@@ -223,7 +263,6 @@ def post_to_slack():
 # Pressure: {status['Pressure']} mbar
 # """
 # post_to_slack(message, SLACK_WEBHOOK_URL)
-
 
 
 if __name__ == '__main__':
