@@ -5,7 +5,8 @@ SCREENSHOT_PATH = "bluefors_screenshot.png"
 
 # DR specific configuration
 BF_LOG_FOLDER = ".../Bluefors logs"
-DR_NAME = "DR"  # name of the dilution refrigerator (for logging purposes) e.g., "DR1", "DR2", etc.
+DR_NAME = "DR1"  # name of the dilution refrigerator (for logging purposes) e.g., "DR1", "DR2", etc.
+DR_MODEL = "LD400"  # model of the dilution refrigerator (for logging purposes) e.g., "LD400", "LD250", etc.
 
 # list of temperature channels to report
 active_temp_ch = {

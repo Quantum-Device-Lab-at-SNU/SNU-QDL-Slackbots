@@ -1,8 +1,13 @@
 import pandas as pd
 import numpy as np
 import pint
+from pathlib import Path
 import datetime, requests, time, schedule
-from config import BF_LOG_FOLDER, SLACK_WEBHOOK_URL, active_temp_ch, testing, scheduled_times
+import pygetwindow as gw
+import pyautogui
+from slack_sdk import WebClient
+
+from config import BF_LOG_FOLDER, DR_MODEL, DR_NAME, SCREENSHOT_PATH, SLACK_BOT_TOKEN, SLACK_CHANNEL_ID, active_temp_ch, testing, scheduled_times
 
 ureg = pint.UnitRegistry()
 
@@ -32,13 +37,13 @@ def latest_pressure_status():
     """
     try: 
         today = datestr()
-        filePath = '%s/%s/maxigauge %s.log' % (BF_LOG_FOLDER, today, today)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / today / f"maxigauge {today}.log"
+        df = pd.read_csv(str(filePath))
         latest = df.iloc[-1]
     except:
         yesterday = datestr(yesterday=True)
-        filePath = '%s/%s/maxigauge %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / yesterday / f"maxigauge {yesterday}.log"
+        df = pd.read_csv(str(filePath))
         latest = df.iloc[-1]
 
     # get timestamp
@@ -65,14 +70,17 @@ def latest_temp_status():
     for ch in active_temp_ch.keys():
         try:
             today = datestr()
-            filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, today, ch, today)
-            df = pd.read_csv(filePath)
+            filePath = Path(BF_LOG_FOLDER) / today / f"{ch} {today}.log"
+            df = pd.read_csv(str(filePath))
             temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
-        except:
-            yesterday = datestr(yesterday=True)
-            filePath = '%s/%s/%s %s.log' % (BF_LOG_FOLDER, yesterday, ch, yesterday)
-            df = pd.read_csv(filePath)
-            temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
+        except: # if today's log file is not found (typically happens at 00:00am), search for yesterday's log file
+            try:
+                yesterday = datestr(yesterday=True)
+                filePath = Path(BF_LOG_FOLDER) / yesterday / f"{ch} {yesterday}.log"
+                df = pd.read_csv(str(filePath))
+                temp_status[active_temp_ch[ch]] = (float(df.iloc[-1, 2]) * ureg.kelvin).to_compact()
+            except: # out of range temperature channels are not logged
+                temp_status[active_temp_ch[ch]] = np.nan
     return temp_status
 
 def latest_flow_status():
@@ -83,13 +91,13 @@ def latest_flow_status():
     """
     try:
         today = datestr()
-        filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, today, today)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / today / f"Flowmeter {today}.log"
+        df = pd.read_csv(str(filePath))
         flow_rate = float(df.iloc[-1, 2])
     except:
         yesterday = datestr(yesterday=True)
-        filePath = '%s/%s/Flowmeter %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / yesterday / f"Flowmeter {yesterday}.log"
+        df = pd.read_csv(str(filePath))
         flow_rate = float(df.iloc[-1, 2])
 
     return {'Flow': (flow_rate * ureg.millimol / ureg.s).to_compact()}
@@ -102,14 +110,14 @@ def lastest_channel_status():
     """
     try:
         today = datestr()
-        filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, today, today)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / today / f"Channels {today}.log"
+        df = pd.read_csv(str(filePath))
         ch_name = np.array(df.iloc[-1, 3::2], dtype=str)
         ch_val = np.array(df.iloc[-1, 4::2], dtype=bool)
     except:
         yesterday = datestr(yesterday=True)
-        filePath = '%s/%s/Channels %s.log' % (BF_LOG_FOLDER, yesterday, yesterday)
-        df = pd.read_csv(filePath)
+        filePath = Path(BF_LOG_FOLDER) / yesterday / f"Channels {yesterday}.log"
+        df = pd.read_csv(str(filePath))
         ch_name = np.array(df.iloc[-1, 3::2], dtype=str)
         ch_val = np.array(df.iloc[-1, 4::2], dtype=bool)
 
@@ -139,7 +147,7 @@ def status_message():
         (_status['50K Flange'] < (60 * ureg.K))
     )  else "🔴"
 
-    message = f"*🧊 DR1 Status Update (Time: {_status['timestamp']}, MXC Status: {mc_alarm_emoji})*\n"
+    message = f"*🧊 {DR_NAME} {DR_MODEL} Status Update (Time: {_status['timestamp']}, MXC Status: {mc_alarm_emoji})*\n"
     # log pressures
     message += "• _*Pressures*_ - "
     for _p_i, _p in enumerate(['P1', 'P2', 'P3', 'P4', 'P5', 'P6']):
@@ -154,7 +162,10 @@ def status_message():
     for _T_i, _T in enumerate(['50K Flange', '4K Flange', 'Still Flange', 'MXC Flange']):
         if _T_i != 0:
             message += ", "
-        message += f"*{_T}:* {_status[_T]:.2f~P}"
+        try: 
+            message += f"*{_T}:* {_status[_T]:.2f~P}"
+        except:
+            message += f"*{_T}:* NaN"
     
     message += "\n"
 
@@ -166,9 +177,45 @@ def status_message():
 
     return message
 
+def capture_program_window(title_keyword, output_path=SCREENSHOT_PATH):
+    matches = [
+        w for w in gw.getWindowsWithTitle(title_keyword)
+        if w.title and w.width > 0 and w.height > 0
+    ]
+
+    if not matches:
+        raise RuntimeError(f"No window found containing title: {title_keyword}")
+
+    window = matches[0]
+
+    # Bring the program to the front
+    window.restore()
+    window.activate()
+
+    # Capture only that window region
+    screenshot = pyautogui.screenshot(region=(
+        window.left,
+        window.top,
+        window.width,
+        window.height,
+    ))
+
+    screenshot.save(output_path)
+    return output_path
+
 def post_to_slack():
-    payload = {"text": status_message(), "link_names": 1, "mrkdwn": True}
-    requests.post(SLACK_WEBHOOK_URL, json=payload)
+
+    message = status_message()
+    screenshot_path = capture_program_window('Bluefors Control Software Frontend', output_path=SCREENSHOT_PATH)
+
+    client = WebClient(token=SLACK_BOT_TOKEN)
+
+    client.files_upload_v2(
+        channel=SLACK_CHANNEL_ID,
+        file=screenshot_path,
+        title=f"{DR_NAME} Bluefors Control Screenshot",
+        initial_comment=message,
+    )
 
 
 #   TODO: check compressor status, turbopump, etc., to make a notification in case of abnormal signs.
@@ -216,7 +263,6 @@ def post_to_slack():
 # Pressure: {status['Pressure']} mbar
 # """
 # post_to_slack(message, SLACK_WEBHOOK_URL)
-
 
 
 if __name__ == '__main__':
