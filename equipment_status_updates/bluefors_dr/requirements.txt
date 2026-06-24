@@ -1,0 +1,9 @@
+pandas
+numpy
+pint
+requests
+schedule
+slack-sdk
+pyautogui
+pygetwindow
+pillow
