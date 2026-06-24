@@ -7,7 +7,7 @@ import pygetwindow as gw
 import pyautogui
 from slack_sdk import WebClient
 
-from config import BF_LOG_FOLDER, DR_NAME, SCREENSHOT_PATH, SLACK_BOT_TOKEN, SLACK_CHANNEL_ID, SLACK_WEBHOOK_URL, active_temp_ch, testing, scheduled_times
+from config import BF_LOG_FOLDER, DR_NAME, SCREENSHOT_PATH, SLACK_BOT_TOKEN, SLACK_CHANNEL_ID, active_temp_ch, testing, scheduled_times
 
 ureg = pint.UnitRegistry()
 
