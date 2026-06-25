@@ -125,7 +125,7 @@ def lastest_channel_status():
     return {'ON Channels': on_channels}
 
 def status_message():
-    """Create a status update message to be sent to Slackbot (incoming Webhooks)
+    """Create a status update message to be sent to Slackbot
 
     Returns:
         str: status update message
