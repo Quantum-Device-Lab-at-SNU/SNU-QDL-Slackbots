@@ -48,6 +48,7 @@ def capture_program_window(title_keyword, output_path=SCREENSHOT_PATH):
 
     # Bring the program to the front
     window.restore()
+    time.sleep(0.5)  # Wait for the window to restore
     window.activate()
 
     # Capture only that window region
