@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import pint
 from pathlib import Path
-import datetime, requests, time, schedule
+import datetime, time, schedule
 import pygetwindow as gw
 import pyautogui
 from slack_sdk import WebClient
